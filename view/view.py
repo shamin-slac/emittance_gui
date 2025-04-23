@@ -27,8 +27,10 @@ class View(QMainWindow):
         beamline_items = self.controller.load_beamlines()
         self.beamline_box.addItems(beamline_items)
         self.beamline_box.setCurrentIndex(-1)
-
-        self.region_box = QComboBox()
+        self.profile_region_box = QComboBox()
+        self.profile_devices_box = QComboBox()
+        self.quad_region_box = QComboBox()
+        self.quads_box = QComboBox()
         
         # Layout for form inputs
         form_layout = QFormLayout()
@@ -48,7 +50,10 @@ class View(QMainWindow):
 
         # Adding to form layout
         form_layout.addRow("Select beamline:", self.beamline_box)
-        form_layout.addRow("Select region:", self.region_box)
+        form_layout.addRow("Select profile region:", self.profile_region_box)
+        form_layout.addRow("Select profile device:", self.profile_devices_box)
+        form_layout.addRow("Select quad region:", self.quad_region_box)
+        form_layout.addRow("Select quad:", self.quads_box)
         form_layout.addRow("Energy (GeV):", self.energy_input)
         form_layout.addRow("Scan Values:", self.scan_values_input)
         form_layout.addRow("Number of Shots:", self.n_shots_input)
@@ -63,7 +68,10 @@ class View(QMainWindow):
 
         # Connecting buttons to functions
         self.beamline_box.currentIndexChanged.connect(self.select_beamline)
-        self.region_box.currentIndexChanged.connect(self.select_region)
+        self.profile_region_box.currentIndexChanged.connect(self.select_profile_region)
+        self.profile_devices_box.currentIndexChanged.connect(self.select_profile_device)
+        self.quad_region_box.currentIndexChanged.connect(self.select_quad_region)
+        self.quads_box.currentIndexChanged.connect(self.select_quad)
         self.run_button.clicked.connect(self.run_quadscan)
         self.abort_button.clicked.connect(self.abort_measurement)
 
@@ -78,11 +86,33 @@ class View(QMainWindow):
     def select_beamline(self):
         self.controller.select_beamline(self.beamline_box.currentText())
         region_items = self.controller.load_regions(self.beamline_box.currentText())
-        self.region_box.clear()
-        self.region_box.addItems(region_items)
+        self.profile_region_box.clear()
+        self.profile_region_box.addItems(region_items)
+        self.quad_region_box.clear()
+        self.quad_region_box.addItems(region_items)
 
-    def select_region(self):
-        self.controller.select_region(self.region_box.currentText())
+    def select_profile_region(self):
+        if self.profile_region_box.currentIndex() != -1:
+            self.controller.select_profile_region(self.profile_region_box.currentText())
+            self.quad_region_box.setCurrentText(self.profile_region_box.currentText())
+            profile_device_items = self.controller.load_profile_devices(self.profile_region_box.currentText())
+            self.profile_devices_box.clear()
+            self.profile_devices_box.addItems(profile_device_items)
+
+    def select_profile_device(self):
+        if self.profile_devices_box.currentIndex() != -1:    
+            self.controller.select_profile_device(self.profile_devices_box.currentText())
+
+    def select_quad_region(self):
+        if self.quad_region_box.currentIndex() != -1:
+            self.controller.select_quad_region(self.quad_region_box.currentText())
+            quad_items = self.controller.load_quads(self.quad_region_box.currentText())
+            self.quads_box.clear()
+            self.quads_box.addItems(quad_items)
+
+    def select_quad(self):
+        if self.quads_box.currentIndex() != -1:    
+            self.controller.select_quad(self.quads_box.currentText())
     
     def run_quadscan(self):
         # Gather input data

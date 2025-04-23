@@ -59,39 +59,58 @@ class Controller:
     # Application configuration
     def load_beamlines(self):
         with importlib.resources.open_text(lcls_yaml, 'beampaths.yaml') as file:
-            beampaths_dict = yaml.load(file, Loader=yaml.FullLoader)
+            regions_by_beamline = yaml.load(file, Loader=yaml.FullLoader)
         
-        return list(beampaths_dict.keys())
+        return list(regions_by_beamline.keys())
 
     def select_beamline(self, beamline):
         self.app_config.beamline = beamline
 
     def load_regions(self, beamline):
         with importlib.resources.open_text(lcls_yaml, 'beampaths.yaml') as file:
-            beampaths_dict = yaml.load(file, Loader=yaml.FullLoader)
-        nested_list = beampaths_dict[beamline]
+            regions = yaml.load(file, Loader=yaml.FullLoader)
+        nested_list = regions[beamline]
 
         regions_list = [item for sublist in nested_list for item in (sublist if isinstance(sublist, list) else [sublist])]
 
         return regions_list
 
-    def select_region(self, region):
-        self.app_config.region = region
+    def select_profile_region(self, region):
+        self.app_config.profile_region = region
 
     def select_measurement_type(self, measurement_type):
         pass
 
     def load_profile_devices(self, region):
-        pass
+        region_yaml = region + ".yaml"
+        with importlib.resources.open_text(lcls_yaml, region_yaml) as file:
+            devices = yaml.load(file, Loader=yaml.FullLoader)
+        profile_devices = []
+        if "screens" in devices.keys():
+            profile_devices += list(devices["screens"].keys())
+        if "wires" in devices.keys():
+            profile_devices += list(devices["wires"].keys())
+
+        return profile_devices
     
     def select_profile_device(self, profile_device):
-        pass
+        self.app_config.profile_device = profile_device
 
+    def select_quad_region(self, region):
+        self.app_config.quad_region = region
+    
     def load_quads(self, region):
-        pass
+        region_yaml = region + ".yaml"
+        with importlib.resources.open_text(lcls_yaml, region_yaml) as file:
+            devices = yaml.load(file, Loader=yaml.FullLoader)
+        quads = []
+        if "magnets" in devices.keys():
+            quads += list(devices["magnets"].keys())
+
+        return quads
 
     def select_quad(self, quad):
-        pass
+        self.app_config.quad = quad
 
     def select_quad_values(self, quad_values):
         pass

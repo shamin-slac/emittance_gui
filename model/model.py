@@ -65,8 +65,9 @@ class AppConfig(BaseModel):
     
     """
     beamline: str = ""
-    region: str = ""
+    profile_region: str = ""
+    quad_region: str = ""
     measurement_type: str = ""
-    profile_devices: List[str] = []
+    profile_device: List[str] = []
     quad: str = ""
     quad_values: List[float] = []
