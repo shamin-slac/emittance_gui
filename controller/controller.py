@@ -1,6 +1,9 @@
 from model.model import AppModel, AppConfig
 
 from lcls_tools.common.devices import yaml as lcls_yaml
+from lcls_tools.common.devices.reader import create_magnet, create_screen, create_wire
+from lcls_tools.common.measurements.screen_profile import ScreenBeamProfileMeasurement
+# from lcls_tools.common.measurements.wire_scan import WireBeamProfileMeasurement
 
 import importlib.resources
 import yaml
@@ -12,6 +15,27 @@ class Controller:
 
     def quadscan_process(self, emit_params):
         """Measure emittance using quad scan, plot beam sizes over scan
+        """
+        """
+        quad = create_magnet(area=emit_params["magnet_area"], name=emit_params["magnet_name"])
+        emit_params["magnet"] = quad
+        if emit_params["profile_name"].startswith(("OTR", "YAG")):
+            profile_device = create_screen(
+                area=emit_params["profile_area"],
+                name=emit_params["profile_name"],
+            )
+            emit_params["beamsize_measurement"] = ScreenBeamProfileMeasurement(device=profile_device)
+        elif emit_params["profile_name"].startswith("WS"):
+            profile_device = create_wire(
+                area=emit_params["profile_area"],
+                name=emit_params["profile_name"],
+            )
+            emit_params["beamsize_measurement"] = WireBeamProfileMeasurement(
+                my_wire=profile_device,
+                beampath=emit_params["beamline"],
+            )
+        else:
+            raise ValueError("Profile device name prefix not recognized")
         """
         self.app_model.quadscan(emit_params)
         return self.app_model.current_data, *self.app_model.plot_data(self.app_model.current_data)
@@ -31,8 +55,8 @@ class Controller:
     def analyze(self):
         pass
 
-    # Get Data
     def redo_point(self):
+        # Get Data
         pass
 
     def save_config(self):

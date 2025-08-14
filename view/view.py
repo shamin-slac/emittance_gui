@@ -1,9 +1,8 @@
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QSpinBox, QLabel
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QSpinBox, QHBoxLayout
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFormLayout, QComboBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
 
 from controller.controller import Controller
 
@@ -22,6 +21,9 @@ class View(QMainWindow):
         main_widget = QWidget(self)
         main_layout = QVBoxLayout(main_widget)
 
+        self.title_hbox = QHBoxLayout(main_widget)
+
+
         self.beamline_box = QComboBox()
 
         beamline_items = self.controller.load_beamlines()
@@ -39,11 +41,9 @@ class View(QMainWindow):
         self.energy_input = QLineEdit(self)
         self.scan_values_input = QLineEdit(self)
         self.n_shots_input = QSpinBox(self)
-        self.magnet_input = QLineEdit(self)
         
         self.energy_input.setPlaceholderText("Energy (GeV)")
         self.scan_values_input.setPlaceholderText("Scan Values (e.g., 1,2,3,4)")
-        self.magnet_input.setPlaceholderText("Magnet Parameters")
         
         self.n_shots_input.setMinimum(1)
         self.n_shots_input.setMaximum(1000)
@@ -57,7 +57,6 @@ class View(QMainWindow):
         form_layout.addRow("Energy (GeV):", self.energy_input)
         form_layout.addRow("Scan Values:", self.scan_values_input)
         form_layout.addRow("Number of Shots:", self.n_shots_input)
-        form_layout.addRow("Magnet:", self.magnet_input)
         
         # Buttons
         self.run_button = QPushButton("Run Quadscan", self)
@@ -119,9 +118,12 @@ class View(QMainWindow):
         emit_params = {
             "energy": float(self.energy_input.text()),
             "scan_values": list(map(float, self.scan_values_input.text().split(','))),
-            "magnet": self.magnet_input.text(),
+            "beamline": self.beamline_box.currentText(),
+            "magnet_area": self.quad_region_box.currentText(),
+            "magnet_name": self.quads_box.currentText(),
+            "profile_area": self.profile_region_box.currentText(),
+            "profile_name": self.profile_devices_box.currentText(),
             "n_measurement_shots": self.n_shots_input.value(),
-            "beamsize_measurement": None,  # Example - you'd want to add actual measurement logic here
         }
 
         # Use controller to process the quadscan
