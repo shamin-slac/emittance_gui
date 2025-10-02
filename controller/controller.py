@@ -1,9 +1,12 @@
+from datetime import datetime
 from model.model import AppModel, AppConfig
+from model.saving_loading import save_measurement_result, load_measurement_result
 
 from lcls_tools.common.devices import yaml as lcls_yaml
 from lcls_tools.common.devices.reader import create_magnet, create_screen, create_wire
 from lcls_tools.common.measurements.screen_profile import ScreenBeamProfileMeasurement
 # from lcls_tools.common.measurements.wire_scan import WireBeamProfileMeasurement
+from lcls_tools.common.measurements.emittance_measurement import EmittanceMeasurementResult
 
 import importlib.resources
 import yaml
@@ -21,17 +24,20 @@ class Controller:
         emit_params["magnet"] = quad
         if emit_params["profile_name"].startswith(("OTR", "YAG")):
             profile_device = create_screen(
-                area=emit_params["profile_area"],
-                name=emit_params["profile_name"],
+                area=emit_params["profile_device_area"],
+                name=emit_params["profile_device_name"],
             )
-            emit_params["beamsize_measurement"] = ScreenBeamProfileMeasurement(device=profile_device)
+            emit_params["beamsize_measurement"] = ScreenBeamProfileMeasurement(
+                beam_profile_device=profile_device,
+                n_shots=emit_params["n_shots"],
+            )
         elif emit_params["profile_name"].startswith("WS"):
             profile_device = create_wire(
-                area=emit_params["profile_area"],
-                name=emit_params["profile_name"],
+                area=emit_params["profile_device_area"],
+                name=emit_params["profile_device_name"],
             )
             emit_params["beamsize_measurement"] = WireBeamProfileMeasurement(
-                my_wire=profile_device,
+                beam_profile_device=profile_device,
                 beampath=emit_params["beamline"],
             )
         else:
@@ -46,11 +52,16 @@ class Controller:
     def abort(self):
         pass
 
-    def save_data(self):
-        pass
+    def save_data(self, filepath=None):
+        if not filepath:
+            current_datetime = datetime.now()
+            filepath = "Emittance_measurement_" + current_datetime.strftime("%Y-%m-%d_%H-%M-%S") + ".h5"
+        save_measurement_result(self.app_model.current_data, filepath)
 
-    def load_data(self):
-        pass
+    def load_data(self, filepath):
+        result = load_measurement_result(filepath, EmittanceMeasurementResult)
+        self.app_model.load_data(result)
+        return self.app_model.current_data, *self.app_model.plot_data(self.app_model.current_data)
 
     def analyze(self):
         pass

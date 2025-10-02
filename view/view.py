@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QSpinBox, QHBoxLayout
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFormLayout, QComboBox
+from PyQt5.QtWidgets import QFormLayout, QComboBox, QFileDialog, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from controller.controller import Controller
@@ -12,7 +12,7 @@ class View(QMainWindow):
         self.controller = controller
 
         self.setWindowTitle('Emittance Measurement')
-        self.setGeometry(100, 100, 900, 950)
+        self.setGeometry(100, 100, 1800, 950)
 
         self.initUI()
 
@@ -20,9 +20,6 @@ class View(QMainWindow):
         # Main widget and layout
         main_widget = QWidget(self)
         main_layout = QVBoxLayout(main_widget)
-
-        self.title_hbox = QHBoxLayout(main_widget)
-
 
         self.beamline_box = QComboBox()
 
@@ -55,15 +52,35 @@ class View(QMainWindow):
         form_layout.addRow("Select quad region:", self.quad_region_box)
         form_layout.addRow("Select quad:", self.quads_box)
         form_layout.addRow("Energy (GeV):", self.energy_input)
-        form_layout.addRow("Scan Values:", self.scan_values_input)
+        form_layout.addRow("Scan Values (kG):", self.scan_values_input)
         form_layout.addRow("Number of Shots:", self.n_shots_input)
         
         # Buttons
         self.run_button = QPushButton("Run Quadscan", self)
         self.abort_button = QPushButton("Abort", self)
+        self.save_button = QPushButton("Save Data", self)
+        self.load_button = QPushButton("Load Data", self)
+        
+        # Result table
+        columns = ["x", "y"]
+        rows = ["Emittance (mm-mrad)", "Beta (m)", "Alpha"]
+        self.result_table = QTableWidget(len(rows), len(columns))
+        self.result_table.setHorizontalHeaderLabels(columns)
+        self.result_table.setVerticalHeaderLabels(rows)
 
+        self.result_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.result_table.horizontalHeader().setStretchLastSection(True)
+        self.result_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        
         # Plot area
         self.matplotlib_widget = MatplotlibWidget(self)
+
+        # Vertical layout with result table and plots
+        result_layout = QVBoxLayout()
+        result_layout.addWidget(self.result_table)
+        result_layout.addWidget(self.matplotlib_widget)
+        result_layout.setStretch(0, 1)
+        result_layout.setStretch(1, 4)
 
         # Connecting buttons to functions
         self.beamline_box.currentIndexChanged.connect(self.select_beamline)
@@ -73,12 +90,16 @@ class View(QMainWindow):
         self.quads_box.currentIndexChanged.connect(self.select_quad)
         self.run_button.clicked.connect(self.run_quadscan)
         self.abort_button.clicked.connect(self.abort_measurement)
-
+        self.save_button.clicked.connect(self.save_data)
+        self.load_button.clicked.connect(self.load_data)
+        
         # Add widgets to main layout
         main_layout.addLayout(form_layout)
         main_layout.addWidget(self.run_button)
         main_layout.addWidget(self.abort_button)
-        main_layout.addWidget(self.matplotlib_widget)
+        main_layout.addLayout(result_layout)
+        main_layout.addWidget(self.save_button)
+        main_layout.addWidget(self.load_button)
 
         self.setCentralWidget(main_widget)
 
@@ -121,21 +142,54 @@ class View(QMainWindow):
             "beamline": self.beamline_box.currentText(),
             "magnet_area": self.quad_region_box.currentText(),
             "magnet_name": self.quads_box.currentText(),
-            "profile_area": self.profile_region_box.currentText(),
-            "profile_name": self.profile_devices_box.currentText(),
-            "n_measurement_shots": self.n_shots_input.value(),
+            "profile_device_area": self.profile_region_box.currentText(),
+            "profile_device_name": self.profile_devices_box.currentText(),
+            "n_shots": self.n_shots_input.value(),
         }
 
         # Use controller to process the quadscan
         data, figure, ax = self.controller.quadscan_process(emit_params)
 
+        # Populate table with emittance, beta, and alpha
+        self.populate_table(data)
+
         # Display the plot (for simplicity, assume plot is saved as an image file)
         self.matplotlib_widget.update_plot(figure, ax)
-
+    
     def abort_measurement(self):
         # Placeholder to handle abort logic
         self.controller.abort()
         print("Measurement aborted.")
+
+    def save_data(self):
+        # Save Emittance Measurement to h5 file
+        #TODO: Use save dialog once datetime is preserved in emittance measurement
+        """
+        options = QFileDialog.Options()
+        filepath, _ = QFileDialog.getSaveFileName(self, "Save File", "", "HDF5 Files (*.h5);;All Files (*)", options=options)
+        """
+        self.controller.save_data()
+    
+    def load_data(self):
+        # Load Emittance Measurement from h5 file
+        options = QFileDialog.Options()
+        filepath, _ = QFileDialog.getOpenFileName(self, "Open File", "", "HDF5 Files (*.h5);;All Files (*)", options=options)
+        data, figure, ax  = self.controller.load_data(filepath)
+
+        self.populate_table(data)
+        self.matplotlib_widget.update_plot(figure, ax)
+
+    def populate_table(self, data):
+        # Populate emittance and beam params into table
+        emittance = data.emittance
+        beta = [data.beam_matrix[0][0], data.beam_matrix[1][0]]
+        alpha = [data.beam_matrix[0][1], data.beam_matrix[1][1]]
+        self.result_table.setItem(0, 0, QTableWidgetItem(str(emittance[0])))
+        self.result_table.setItem(0, 1, QTableWidgetItem(str(emittance[1])))
+        self.result_table.setItem(1, 0, QTableWidgetItem(str(beta[0])))
+        self.result_table.setItem(1, 1, QTableWidgetItem(str(beta[1])))
+        self.result_table.setItem(2, 0, QTableWidgetItem(str(alpha[0])))
+        self.result_table.setItem(2, 1, QTableWidgetItem(str(alpha[1])))
 
 class MatplotlibWidget(QWidget):
     def __init__(self, parent=None):
@@ -149,12 +203,16 @@ class MatplotlibWidget(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
+        # self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+
     def update_plot(self, figure, ax):
         """Update the plot with the new scan results."""
         self.figure, self.ax = figure, ax
+        self.figure.tight_layout()
         
         # Create the canvas with the new figure and add it to the layout
         self.canvas = FigureCanvas(self.figure)
+        # self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
         
         # Clear the existing layout and add the new canvas
         layout = self.layout()

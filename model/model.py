@@ -29,13 +29,11 @@ class AppModel(BaseModel):
             energy=emit_params["energy"], 
             scan_values=emit_params["scan_values"], 
             magnet=emit_params["magnet"], 
-            beamsize_measurement=emit_params["beamsize_measurement"], 
-            n_measurement_shots=emit_params["n_measurement_shots"]
+            beamsize_measurement=emit_params["beamsize_measurement"],
         )
-        results = measurement.measure()
+        result = measurement.measure()
         self.emit_params = emit_params
-        self.previous_data = self.current_data
-        self.current_data = results
+        self.load_data(result)
     '''
 
     def quadscan(self, emit_params):
@@ -47,6 +45,7 @@ class AppModel(BaseModel):
                                                        -1.11111111, 1.11111111, 5.55555556, 7.77777778, 10.]), 
                                              np.array([-10., -3.33333333, -1.11111111, 1.11111111,
                                                        3.33333333, 5.55555556, 7.77777778, 10.])]
+                self.quadrupole_focusing_strengths = [np.array([1,2,3,4,5,6,7,8,9]), np.array([1,2,3,4,5,6,7,8,9])]
                 self.twiss_at_screen = [np.array([[4.45227821, -0.08799274, 0.22634316],
                                                    [2.61720712, 0.62549609, 0.53157633],
                                                    [1.3118672, 0.84197498, 1.30266377],
@@ -70,6 +69,7 @@ class AppModel(BaseModel):
                                     np.array([0.00062267, 0.00030789, 0.00023073,
                                               0.00020197, 0.00024109, 0.00032542,
                                               0.00042986, 0.00054356])]
+                self.beam_matrix = np.array([[1,2,3],[4,5,6]])
                 self.emittance = np.array([0.01, 0.09999997])
                 self.bmag = [np.array([9.36189932, 5.66900405, 3.05982085,
                                        1.51113423, 1.00000002, 1.5037432,
@@ -77,15 +77,22 @@ class AppModel(BaseModel):
                             np.array([3.79730158, 1.17877574, 1.00000001,
                                       1.18141181, 1.73104511, 2.65702909,
                                       3.96758895, 5.67104666])]
+                self.metadata = []
+            
+            def __iter__(self):
+                return iter(self.__dict__.items())
         
-        self.previous_data = self.current_data
-        self.current_data = EmittanceMeasurementResult()
+        self.load_data(EmittanceMeasurementResult())
 
     def abort_measurement(self):
         pass
 
     def plot_data(self, emittance_result):
         return plot_quad_scan_result(emittance_result)
+    
+    def load_data(self, emittance_result):
+        self.previous_data = self.current_data
+        self.current_data = emittance_result
     
 class AppConfig(BaseModel):
     """Holds application configuration
