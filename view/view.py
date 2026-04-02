@@ -1,7 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QSpinBox, QHBoxLayout
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFormLayout, QComboBox, QFileDialog, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QSizePolicy
+from PyQt5.QtWidgets import (
+    QFormLayout, QComboBox, QFileDialog, 
+    QTableWidget, QTableWidgetItem, QAbstractScrollArea, 
+    QHeaderView, QSizePolicy, QStackedWidget,
+)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from controller.controller import Controller
@@ -26,13 +30,28 @@ class View(QMainWindow):
         beamline_items = self.controller.load_beamlines()
         self.beamline_box.addItems(beamline_items)
         self.beamline_box.setCurrentIndex(-1)
+
+        self.measurement_type_box = QComboBox()
+        self.measurement_type_box.addItems(["Quad Scan", "Multi Device"])
+        self.measurement_type_box.currentIndexChanged.connect(self.switch_measurement_type)
+
+        self.stack = QStackedWidget()
+
+        # options for quad scan
+        page_quad = QWidget()
+        quad_layout = QVBoxLayout(page_quad)
+        form_layout_quad = QFormLayout()
+
+        # options for multi device
+        page_multi = QWidget()
+        multi_layout = QVBoxLayout(page_multi)
+        
+        # Layout for form inputs
+        
         self.profile_region_box = QComboBox()
         self.profile_devices_box = QComboBox()
         self.quad_region_box = QComboBox()
         self.quads_box = QComboBox()
-        
-        # Layout for form inputs
-        form_layout = QFormLayout()
 
         # Input fields
         self.energy_input = QLineEdit(self)
@@ -46,14 +65,14 @@ class View(QMainWindow):
         self.n_shots_input.setMaximum(1000)
 
         # Adding to form layout
-        form_layout.addRow("Select beamline:", self.beamline_box)
-        form_layout.addRow("Select profile region:", self.profile_region_box)
-        form_layout.addRow("Select profile device:", self.profile_devices_box)
-        form_layout.addRow("Select quad region:", self.quad_region_box)
-        form_layout.addRow("Select quad:", self.quads_box)
-        form_layout.addRow("Energy (GeV):", self.energy_input)
-        form_layout.addRow("Scan Values (kG):", self.scan_values_input)
-        form_layout.addRow("Number of Shots:", self.n_shots_input)
+        form_layout_quad.addRow("Select beamline:", self.beamline_box)
+        form_layout_quad.addRow("Select profile region:", self.profile_region_box)
+        form_layout_quad.addRow("Select profile device:", self.profile_devices_box)
+        form_layout_quad.addRow("Select quad region:", self.quad_region_box)
+        form_layout_quad.addRow("Select quad:", self.quads_box)
+        form_layout_quad.addRow("Energy (GeV):", self.energy_input)
+        form_layout_quad.addRow("Scan Values (kG):", self.scan_values_input)
+        form_layout_quad.addRow("Number of Shots:", self.n_shots_input)
         
         # Buttons
         self.run_button = QPushButton("Run Quadscan", self)
@@ -94,15 +113,19 @@ class View(QMainWindow):
         self.load_button.clicked.connect(self.load_data)
         
         # Add widgets to main layout
-        main_layout.addLayout(form_layout)
-        main_layout.addWidget(self.run_button)
-        main_layout.addWidget(self.abort_button)
+        # main_layout.addLayout(form_layout)
+        quad_layout.addLayout(form_layout_quad)
+        quad_layout.addWidget(self.run_button)
+        quad_layout.addWidget(self.abort_button)
         main_layout.addLayout(result_layout)
         main_layout.addWidget(self.save_button)
         main_layout.addWidget(self.load_button)
 
         self.setCentralWidget(main_widget)
 
+    def switch_measurement_type(self):
+        
+    
     def select_beamline(self):
         self.controller.select_beamline(self.beamline_box.currentText())
         region_items = self.controller.load_regions(self.beamline_box.currentText())
@@ -149,6 +172,28 @@ class View(QMainWindow):
 
         # Use controller to process the quadscan
         data, figure, ax = self.controller.quadscan_process(emit_params)
+
+        # Populate table with emittance, beta, and alpha
+        self.populate_table(data)
+
+        # Display the plot (for simplicity, assume plot is saved as an image file)
+        self.matplotlib_widget.update_plot(figure, ax)
+
+    def run_multi(self):
+        # Gather input data
+        emit_params = {
+            "energy": float(self.energy_input.text()),
+            "scan_values": list(map(float, self.scan_values_input.text().split(','))),
+            "beamline": self.beamline_box.currentText(),
+            "magnet_area": self.quad_region_box.currentText(),
+            "magnet_name": self.quads_box.currentText(),
+            "profile_device_area": self.profile_region_box.currentText(),
+            "profile_device_name": self.profile_devices_box.currentText(),
+            "n_shots": self.n_shots_input.value(),
+        }
+
+        # Use controller to process the quadscan
+        data, figure, ax = self.controller.multi_process(emit_params)
 
         # Populate table with emittance, beta, and alpha
         self.populate_table(data)

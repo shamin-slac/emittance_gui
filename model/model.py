@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from lcls_tools.common.devices.magnet import Magnet
 from lcls_tools.common.measurements.measurement import Measurement
-from lcls_tools.common.measurements.emittance_measurement import QuadScanEmittance
+from lcls_tools.common.measurements.emittance_measurement import QuadScanEmittance, MultiDeviceEmittance
 from lcls_tools.common.frontend.plotting.emittance import plot_quad_scan_result
 from pydantic import BaseModel, PositiveInt
 
@@ -84,6 +84,15 @@ class AppModel(BaseModel):
         
         self.load_data(EmittanceMeasurementResult())
 
+    def multi(self, emit_params):
+        measurement = MultiDeviceEmittance(
+            energy=emit_params["energy"], 
+            beamsize_measurements=emit_params["beamsize_measurements"],
+        )
+        result = measurement.measure()
+        self.emit_params = emit_params
+        self.load_data(result)
+    
     def abort_measurement(self):
         pass
 

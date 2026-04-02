@@ -17,7 +17,14 @@ class Controller:
         self.app_config = app_config
 
     def quadscan_process(self, emit_params):
-        """Measure emittance using quad scan, plot beam sizes over scan
+        """
+        Measure emittance using quad scan, plot beam sizes over scan
+        
+        Arguments
+        ----------
+        emit_params: Dictionary containing the following keys:
+        `energy`, `scan_values`, `beamline`, `magnet_area`, `magnet_name`,
+        `profile_device_area`, `profile_device_name`, `n_shots`
         """
         """
         quad = create_magnet(area=emit_params["magnet_area"], name=emit_params["magnet_name"])
@@ -46,8 +53,17 @@ class Controller:
         self.app_model.quadscan(emit_params)
         return self.app_model.current_data, *self.app_model.plot_data(self.app_model.current_data)
     
-    def multidevice_process(self, emit_params):
-        pass
+    def multi_process(self, emit_params):
+        """
+        Measure emittance using quad scan, plot beam sizes over scan
+        
+        Arguments
+        ----------
+        emit_params: Dictionary containing the following keys:
+        `energy`, `beamline`, `profile_device_areas`, `profile_device_names`
+        """
+        self.app_model.multi(emit_params)
+        return self.app_model.current_data, *self.app_model.plot_data(self.app_model.current_data)
     
     def abort(self):
         pass
@@ -103,8 +119,8 @@ class Controller:
 
     def load_regions(self, beamline):
         with importlib.resources.open_text(lcls_yaml, 'beampaths.yaml') as file:
-            regions = yaml.load(file, Loader=yaml.FullLoader)
-        nested_list = regions[beamline]
+            regions_by_beamline = yaml.load(file, Loader=yaml.FullLoader)
+        nested_list = regions_by_beamline[beamline]
 
         regions_list = [item for sublist in nested_list for item in (sublist if isinstance(sublist, list) else [sublist])]
 
