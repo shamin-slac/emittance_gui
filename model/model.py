@@ -1,8 +1,14 @@
-from typing import Any, List, Optional
-from lcls_tools.common.devices.magnet import Magnet
-from lcls_tools.common.measurements.measurement import Measurement
-from lcls_tools.common.measurements.emittance_measurement import QuadScanEmittance, MultiDeviceEmittance
-from lcls_tools.common.frontend.plotting.emittance import plot_quad_scan_result
+from typing import Any, List, Optional, Union
+
+import numpy as np
+from slac_devices.magnet import Magnet
+from slac_devices.screen import Screen
+from slac_devices.wire import Wire
+from slac_measurements.emittance import compute_emit_bmag, normalize_emittance
+from slac_measurements.measurement import Measurement
+from slac_measurements.emittance_measurement import QuadScanEmittance, MultiDeviceEmittance
+from slac_measurements.model_general_calcs import bdes_to_kmod, build_quad_rmat, get_optics_after_magnet, multi_device_optics
+from slac_tools.common.frontend.plotting.emittance import plot_quad_scan_result
 from pydantic import BaseModel, PositiveInt
 
 from model.plotting import plot_beam_size
@@ -103,6 +109,7 @@ class AppModel(BaseModel):
         self.previous_data = self.current_data
         self.current_data = emittance_result
     
+
 class AppConfig(BaseModel):
     """Holds application configuration
 

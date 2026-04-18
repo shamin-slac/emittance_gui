@@ -2,11 +2,11 @@ from datetime import datetime
 from model.model import AppModel, AppConfig
 from model.saving_loading import save_measurement_result, load_measurement_result
 
-from lcls_tools.common.devices import yaml as lcls_yaml
-from lcls_tools.common.devices.reader import create_magnet, create_screen, create_wire
-from lcls_tools.common.measurements.screen_profile import ScreenBeamProfileMeasurement
-# from lcls_tools.common.measurements.wire_scan import WireBeamProfileMeasurement
-from lcls_tools.common.measurements.emittance_measurement import EmittanceMeasurementResult
+from slac_tools.common.devices import yaml as lcls_yaml
+from slac_tools.common.devices.reader import create_magnet, create_screen, create_wire
+from slac_tools.common.measurements.screen_profile import ScreenBeamProfileMeasurement
+# from slac_tools.common.measurements.wire_scan import WireBeamProfileMeasurement
+from slac_tools.common.measurements.emittance_measurement import EmittanceMeasurementResult
 
 import importlib.resources
 import yaml
