@@ -8,10 +8,9 @@ from slac_measurements.emittance import compute_emit_bmag, normalize_emittance
 from slac_measurements.measurement import Measurement
 from slac_measurements.emittance_measurement import QuadScanEmittance, MultiDeviceEmittance
 from slac_measurements.model_general_calcs import bdes_to_kmod, build_quad_rmat, get_optics_after_magnet, multi_device_optics
-from slac_tools.common.frontend.plotting.emittance import plot_quad_scan_result
 from pydantic import BaseModel, PositiveInt
 
-from model.plotting import plot_beam_size
+from model.plotting import plot_beam_size, plot_multi_result, plot_quad_scan_result
 
 class AppModel(BaseModel):
     """Holds attributes and data of emittance measurements
@@ -102,8 +101,11 @@ class AppModel(BaseModel):
     def abort_measurement(self):
         pass
 
-    def plot_data(self, emittance_result):
+    def plot_data_quad_scan(self, emittance_result):
         return plot_quad_scan_result(emittance_result)
+    
+    def plot_data_multi(self, emittance_result):
+        return plot_multi_result(emittance_result)
     
     def load_data(self, emittance_result):
         self.previous_data = self.current_data
@@ -121,6 +123,9 @@ class AppConfig(BaseModel):
     profile_region: str = ""
     quad_region: str = ""
     measurement_type: str = ""
-    profile_device: List[str] = []
+    profile_device: str = ""
     quad: str = ""
     quad_values: List[float] = []
+    multi_device_region: str = ""
+    multi_device_list: List[str] = []
+

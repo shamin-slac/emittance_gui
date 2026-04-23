@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QSpinBox, QHBoxLayout
+from PyQt5.QtWidgets import QLabel, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QSpinBox, QHBoxLayout
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QBuffer, Qt
 from PyQt5.QtWidgets import (
     QFormLayout, QComboBox, QFileDialog, 
     QTableWidget, QTableWidgetItem, QAbstractScrollArea, 
@@ -25,17 +25,31 @@ class View(QMainWindow):
         main_widget = QWidget(self)
         main_layout = QVBoxLayout(main_widget)
 
+        self.beamline_row = QHBoxLayout()
+        self.beamline_label = QLabel("Select beamline:")
+        self.beamline_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        self.beamline_label.setMinimumWidth(160)
         self.beamline_box = QComboBox()
+        self.beamline_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.beamline_row.addWidget(self.beamline_label)
+        self.beamline_row.addWidget(self.beamline_box)
 
         beamline_items = self.controller.load_beamlines()
         self.beamline_box.addItems(beamline_items)
         self.beamline_box.setCurrentIndex(-1)
 
+        self.measurement_type_stack = QStackedWidget()
+
+        self.measurement_type_row = QHBoxLayout()
+        self.measurement_type_label = QLabel("Select measurement type:")
+        self.measurement_type_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        self.measurement_type_label.setMinimumWidth(160)
         self.measurement_type_box = QComboBox()
         self.measurement_type_box.addItems(["Quad Scan", "Multi Device"])
-        self.measurement_type_box.currentIndexChanged.connect(self.switch_measurement_type)
-
-        self.stack = QStackedWidget()
+        self.measurement_type_box.currentIndexChanged.connect(self.measurement_type_stack.setCurrentIndex)
+        self.measurement_type_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.measurement_type_row.addWidget(self.measurement_type_label)
+        self.measurement_type_row.addWidget(self.measurement_type_box)
 
         # options for quad scan
         page_quad = QWidget()
@@ -45,38 +59,53 @@ class View(QMainWindow):
         # options for multi device
         page_multi = QWidget()
         multi_layout = QVBoxLayout(page_multi)
+        form_layout_multi = QFormLayout()
         
-        # Layout for form inputs
-        
+        # Layout for quad form inputs
         self.profile_region_box = QComboBox()
-        self.profile_devices_box = QComboBox()
+        self.profile_device_box = QComboBox()
         self.quad_region_box = QComboBox()
-        self.quads_box = QComboBox()
+        self.quad_box = QComboBox()
 
-        # Input fields
-        self.energy_input = QLineEdit(self)
+        # Layout for multi form inputs
+        self.multi_region_box = QComboBox()
+        self.multi_list_box = QComboBox()
+
+        # Quad Input fields
+        self.quad_scan_energy_input = QLineEdit(self)
         self.scan_values_input = QLineEdit(self)
         self.n_shots_input = QSpinBox(self)
         
-        self.energy_input.setPlaceholderText("Energy (GeV)")
+        self.quad_scan_energy_input.setPlaceholderText("Energy (GeV)")
         self.scan_values_input.setPlaceholderText("Scan Values (e.g., 1,2,3,4)")
         
         self.n_shots_input.setMinimum(1)
         self.n_shots_input.setMaximum(1000)
 
-        # Adding to form layout
-        form_layout_quad.addRow("Select beamline:", self.beamline_box)
+        self.multi_energy_input = QLineEdit(self)
+        self.multi_energy_input.setPlaceholderText("Energy (GeV)")
+
+        # Adding to quad form layout
         form_layout_quad.addRow("Select profile region:", self.profile_region_box)
-        form_layout_quad.addRow("Select profile device:", self.profile_devices_box)
+        form_layout_quad.addRow("Select profile device:", self.profile_device_box)
         form_layout_quad.addRow("Select quad region:", self.quad_region_box)
-        form_layout_quad.addRow("Select quad:", self.quads_box)
-        form_layout_quad.addRow("Energy (GeV):", self.energy_input)
+        form_layout_quad.addRow("Select quad:", self.quad_box)
+        form_layout_quad.addRow("Energy (GeV):", self.quad_scan_energy_input)
         form_layout_quad.addRow("Scan Values (kG):", self.scan_values_input)
         form_layout_quad.addRow("Number of Shots:", self.n_shots_input)
+
+        # Adding to multi form layout
+        form_layout_multi.addRow("Select multi device region:", self.multi_region_box)
+        form_layout_multi.addRow("Select multi device list:", self.multi_list_box)
+        form_layout_multi.addRow("Energy (GeV):", self.multi_energy_input)
         
         # Buttons
-        self.run_button = QPushButton("Run Quadscan", self)
-        self.abort_button = QPushButton("Abort", self)
+        self.run_quad_scan_button = QPushButton("Run Quadscan", self)
+        self.run_multi_button = QPushButton("Run Multi Device Measurement", self)
+        self.abort_quad_scan_button = QPushButton("Abort", self)
+        self.abort_multi_button = QPushButton("Abort", self)
+        self.log_button = QPushButton("Log Book GUI Screenshot", self)
+        self.log_button.setStyleSheet("background-color: rgb(119, 241, 241);")
         self.save_button = QPushButton("Save Data", self)
         self.load_button = QPushButton("Load Data", self)
         
@@ -104,69 +133,97 @@ class View(QMainWindow):
         # Connecting buttons to functions
         self.beamline_box.currentIndexChanged.connect(self.select_beamline)
         self.profile_region_box.currentIndexChanged.connect(self.select_profile_region)
-        self.profile_devices_box.currentIndexChanged.connect(self.select_profile_device)
+        self.profile_device_box.currentIndexChanged.connect(self.select_profile_device)
         self.quad_region_box.currentIndexChanged.connect(self.select_quad_region)
-        self.quads_box.currentIndexChanged.connect(self.select_quad)
-        self.run_button.clicked.connect(self.run_quadscan)
-        self.abort_button.clicked.connect(self.abort_measurement)
+        self.quad_box.currentIndexChanged.connect(self.select_quad)
+        self.multi_region_box.currentIndexChanged.connect(self.select_multi_device_region)
+        self.multi_list_box.currentIndexChanged.connect(self.select_multi_device_list)
+        self.run_quad_scan_button.clicked.connect(self.run_quadscan)
+        self.run_multi_button.clicked.connect(self.run_multi)
+        self.abort_quad_scan_button.clicked.connect(self.abort_measurement)
+        self.abort_multi_button.clicked.connect(self.abort_measurement)
+        self.log_button.clicked.connect(self.log_book)
         self.save_button.clicked.connect(self.save_data)
         self.load_button.clicked.connect(self.load_data)
         
-        # Add widgets to main layout
+        # Add widgets to layouts
         # main_layout.addLayout(form_layout)
         quad_layout.addLayout(form_layout_quad)
-        quad_layout.addWidget(self.run_button)
-        quad_layout.addWidget(self.abort_button)
+        quad_layout.addWidget(self.run_quad_scan_button)
+        quad_layout.addWidget(self.abort_quad_scan_button)
+
+        multi_layout.addLayout(form_layout_multi)
+        multi_layout.addWidget(self.run_multi_button)
+        multi_layout.addWidget(self.abort_multi_button)
+
+        self.measurement_type_stack.addWidget(page_quad)
+        self.measurement_type_stack.addWidget(page_multi)
+
+        main_layout.addLayout(self.beamline_row)
+        main_layout.addLayout(self.measurement_type_row)
+        main_layout.addWidget(self.measurement_type_stack)
         main_layout.addLayout(result_layout)
+        main_layout.addWidget(self.log_button)
         main_layout.addWidget(self.save_button)
         main_layout.addWidget(self.load_button)
 
-        self.setCentralWidget(main_widget)
-
-    def switch_measurement_type(self):
-        
+        self.setCentralWidget(main_widget)    
     
     def select_beamline(self):
         self.controller.select_beamline(self.beamline_box.currentText())
         region_items = self.controller.load_regions(self.beamline_box.currentText())
+        multi_region_items = self.controller.load_multi_regions(self.beamline_box.currentText())
         self.profile_region_box.clear()
         self.profile_region_box.addItems(region_items)
         self.quad_region_box.clear()
         self.quad_region_box.addItems(region_items)
+        self.multi_region_box.clear()
+        self.multi_region_box.addItems(multi_region_items)
 
     def select_profile_region(self):
         if self.profile_region_box.currentIndex() != -1:
             self.controller.select_profile_region(self.profile_region_box.currentText())
             self.quad_region_box.setCurrentText(self.profile_region_box.currentText())
             profile_device_items = self.controller.load_profile_devices(self.profile_region_box.currentText())
-            self.profile_devices_box.clear()
-            self.profile_devices_box.addItems(profile_device_items)
+            self.profile_device_box.clear()
+            self.profile_device_box.addItems(profile_device_items)
 
     def select_profile_device(self):
-        if self.profile_devices_box.currentIndex() != -1:    
-            self.controller.select_profile_device(self.profile_devices_box.currentText())
+        if self.profile_device_box.currentIndex() != -1:    
+            self.controller.select_profile_device(self.profile_device_box.currentText())
 
     def select_quad_region(self):
         if self.quad_region_box.currentIndex() != -1:
             self.controller.select_quad_region(self.quad_region_box.currentText())
             quad_items = self.controller.load_quads(self.quad_region_box.currentText())
-            self.quads_box.clear()
-            self.quads_box.addItems(quad_items)
+            self.quad_box.clear()
+            self.quad_box.addItems(quad_items)
 
     def select_quad(self):
-        if self.quads_box.currentIndex() != -1:    
-            self.controller.select_quad(self.quads_box.currentText())
+        if self.quad_box.currentIndex() != -1:    
+            self.controller.select_quad(self.quad_box.currentText())
+
+    def select_multi_device_region(self):
+        if self.multi_region_box.currentIndex() != -1:
+            self.controller.select_multi_device_region(self.multi_region_box.currentText())
+            multi_device_list_items = self.controller.load_multi_device_lists(self.beamline_box.currentText(), self.multi_region_box.currentText())
+            self.multi_list_box.clear()
+            self.multi_list_box.addItems(multi_device_list_items)
+    
+    def select_multi_device_list(self):
+        if self.multi_list_box.currentIndex() != -1:
+            self.controller.select_multi_device_list(self.multi_list_box.currentText())
     
     def run_quadscan(self):
         # Gather input data
         emit_params = {
-            "energy": float(self.energy_input.text()),
+            "energy": float(self.quad_scan_energy_input.text()),
             "scan_values": list(map(float, self.scan_values_input.text().split(','))),
             "beamline": self.beamline_box.currentText(),
             "magnet_area": self.quad_region_box.currentText(),
-            "magnet_name": self.quads_box.currentText(),
+            "magnet_name": self.quad_box.currentText(),
             "profile_device_area": self.profile_region_box.currentText(),
-            "profile_device_name": self.profile_devices_box.currentText(),
+            "profile_device_name": self.profile_device_box.currentText(),
             "n_shots": self.n_shots_input.value(),
         }
 
@@ -180,16 +237,17 @@ class View(QMainWindow):
         self.matplotlib_widget.update_plot(figure, ax)
 
     def run_multi(self):
+        import json
+
+        multi_device_dict = json.loads(self.multi_list_box.currentText())
+        multi_device_names = list(multi_device_dict.keys())
+        multi_device_areas = list(multi_device_dict.values())
         # Gather input data
         emit_params = {
-            "energy": float(self.energy_input.text()),
-            "scan_values": list(map(float, self.scan_values_input.text().split(','))),
+            "energy": float(self.multi_energy_input.text()),
             "beamline": self.beamline_box.currentText(),
-            "magnet_area": self.quad_region_box.currentText(),
-            "magnet_name": self.quads_box.currentText(),
-            "profile_device_area": self.profile_region_box.currentText(),
-            "profile_device_name": self.profile_devices_box.currentText(),
-            "n_shots": self.n_shots_input.value(),
+            "profile_device_areas": multi_device_areas,
+            "profile_device_names": multi_device_names,
         }
 
         # Use controller to process the quadscan
@@ -206,6 +264,55 @@ class View(QMainWindow):
         self.controller.abort()
         print("Measurement aborted.")
 
+    def log_book(self):
+        import physicselog as elog
+
+        beampath = self.beamline_box.currentText()
+        if beampath.startswith("SC"):
+            logbook = "lcls2"
+        elif beampath.startswith("CU"):
+            logbook = "lcls"
+        """
+        else:
+            self.logger.info(
+                "Could not determine logbook for beampath %s",
+                self.nav.beampath,
+            )
+            return
+        """
+
+        measurement_type = self.measurement_type_box.currentText()
+        title = f"{measurement_type} Emittance"
+        if measurement_type == "Multi Device":
+            multi_device_list = self.multi_list_box.currentText()
+            title += f" {multi_device_list}"
+        elif measurement_type == "Quad Scan":
+            quad = self.quad_box.currentText()
+            beam_profile_device = self.profile_device_box.currentText()
+            title += f" {quad} {beam_profile_device}"
+
+        pixmap = self.grab()
+        buffer = QBuffer()
+        buffer.open(QBuffer.ReadWrite)
+        pixmap.save(buffer, "PNG")
+
+        """
+        try:
+            elog = importlib.import_module("physicselog")
+        except Exception:
+            self.logger.info("physicselog is unavailable in this environment")
+            return
+        """
+
+        elog.submit_entry(
+            logbook,
+            "Wire Scan GUI",
+            title,
+            "",
+            buffer.data(),
+        )
+        self.controller.save_data()
+    
     def save_data(self):
         # Save Emittance Measurement to h5 file
         #TODO: Use save dialog once datetime is preserved in emittance measurement

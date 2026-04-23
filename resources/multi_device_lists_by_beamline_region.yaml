@@ -1,0 +1,52 @@
+CU_HXR:
+  IN20:
+    -
+      WS01: DL1
+      WS02: DL1
+      WS03: DL1
+    -
+      OTR1: DL1
+      OTR2: DL1
+      OTR3: DL1
+  LI21:
+    -
+      WS11: BC1
+      WS12: BC1
+      WS13: BC1
+  LI28:
+    -
+      WS27644: L3
+      WS28144: L3
+      WS28744: L3
+  LTUH:
+    -
+      WS31: LTUH
+      WS32: LTUH
+      WS33: LTUH
+      WS34: LTUH
+CU_SXR:
+  IN20:
+    -
+      WS01: DL1
+      WS02: DL1
+      WS03: DL1
+    -
+      OTR1: DL1
+      OTR2: DL1
+      OTR3: DL1
+  LI21:
+    -
+      WS11: BC1
+      WS12: BC1
+      WS13: BC1
+  LI28:
+    -
+      WS27644: L3
+      WS28144: L3
+      WS28744: L3
+  LTUS:
+    -
+      WS31B: LTUS
+      WS32B: LTUS
+      WS33B: LTUS
+      WS34B: LTUS
