@@ -29,7 +29,7 @@ def plot_quad_scan_result(emittance_result):
 
         ax[0].plot(
             k,
-            emittance_result.rms_beamsizes[i][sorted_indices] * 1e6,
+            emittance_result.rms_beamsizes[i][sorted_indices],
             "+",
             label=f"rms_{c[i]}",
         )
@@ -37,7 +37,7 @@ def plot_quad_scan_result(emittance_result):
         # plot fit from twiss at screen calculation
         ax[0].plot(
             k,
-            np.sqrt(beta * emittance_result.emittance[i]) * 1e3,
+            np.sqrt(beta * emittance_result.emittance[i]),
             "--",
             label=f"{c[i]}_fit",
         )
@@ -91,13 +91,15 @@ def plot_multi_result(emittance_result):
 
     c = ["x", "y"]
     for i in range(2):
-        sorted_indices = np.argsort(emittance_result.beam_profile_devices_z)
-        z = emittance_result.beam_profile_devices_z[sorted_indices]
+        beam_profile_devices_z = np.array(emittance_result.beam_profile_devices_z)
+        sorted_indices = np.argsort(beam_profile_devices_z)
+        z = beam_profile_devices_z[sorted_indices]
+
         beta = emittance_result.twiss[i][sorted_indices][:, 0]
 
         ax[0].plot(
             z,
-            emittance_result.rms_beamsizes[i][sorted_indices] * 1e6,
+            emittance_result.rms_beamsizes[i][sorted_indices],
             "+",
             label=f"rms_{c[i]}",
         )
@@ -105,7 +107,7 @@ def plot_multi_result(emittance_result):
         # plot fit from twiss at screen calculation
         ax[0].plot(
             z,
-            np.sqrt(beta * emittance_result.emittance[i]) * 1e3,
+            np.sqrt(beta * emittance_result.emittance[i]),
             "--",
             label=f"{c[i]}_fit",
         )

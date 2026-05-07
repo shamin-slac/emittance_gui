@@ -266,6 +266,8 @@ class View(QMainWindow):
 
     def log_book(self):
         import physicselog as elog
+        import tempfile
+        import os
 
         beampath = self.beamline_box.currentText()
         if beampath.startswith("SC"):
@@ -291,26 +293,23 @@ class View(QMainWindow):
             beam_profile_device = self.profile_device_box.currentText()
             title += f" {quad} {beam_profile_device}"
 
-        pixmap = self.grab()
-        buffer = QBuffer()
-        buffer.open(QBuffer.ReadWrite)
-        pixmap.save(buffer, "PNG")
+        # Create a temporary file
+        temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        temp_path = temp_file.name
+        temp_file.close()
 
-        """
-        try:
-            elog = importlib.import_module("physicselog")
-        except Exception:
-            self.logger.info("physicselog is unavailable in this environment")
-            return
-        """
+        #Grab and save the screenshot
+        screenshot = self.grab()
+        screenshot.save(temp_path, "PNG")
 
         elog.submit_entry(
             logbook,
             "Wire Scan GUI",
             title,
             "",
-            buffer.data(),
+            temp_path,
         )
+        os.unlink(temp_path)
         self.controller.save_data()
     
     def save_data(self):

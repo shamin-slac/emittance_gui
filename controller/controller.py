@@ -30,7 +30,7 @@ class Controller:
         """
         quad = create_magnet(area=emit_params["magnet_area"], name=emit_params["magnet_name"])
         emit_params["magnet"] = quad
-        if emit_params["profile_name"].startswith(("OTR", "YAG")):
+        if emit_params["profile_device_name"].startswith(("OTR", "YAG")):
             profile_device = create_screen(
                 area=emit_params["profile_device_area"],
                 name=emit_params["profile_device_name"],
@@ -39,7 +39,7 @@ class Controller:
                 beam_profile_device=profile_device,
                 n_shots=emit_params["n_shots"],
             )
-        elif emit_params["profile_name"].startswith("WS"):
+        elif emit_params["profile_device_name"].startswith("WS"):
             profile_device = create_wire(
                 area=emit_params["profile_device_area"],
                 name=emit_params["profile_device_name"],
@@ -167,9 +167,12 @@ class Controller:
         self.app_config.profile_region = region
 
     def load_profile_devices(self, region):
-        region_yaml = "yaml/" + region + ".yaml"
-        with resources.open_text(slac_package_data, region_yaml) as file:
-            devices = yaml.load(file, Loader=yaml.FullLoader)
+        from importlib.resources import files
+
+        file_path = files(slac_package_data) / "yaml" / f"{region}.yaml"
+        with file_path.open("r") as file:
+            devices = yaml.safe_load(file)
+
         profile_devices = []
         if "screens" in devices.keys():
             profile_devices += list(devices["screens"].keys())
@@ -185,9 +188,11 @@ class Controller:
         self.app_config.quad_region = region
     
     def load_quads(self, region):
-        region_yaml = "yaml/" + region + ".yaml"
-        with resources.open_text(slac_package_data, region_yaml) as file:
-            devices = yaml.load(file, Loader=yaml.FullLoader)
+        from importlib.resources import files
+
+        file_path = files(slac_package_data) / "yaml" / f"{region}.yaml"
+        with file_path.open("r") as file:
+            devices = yaml.safe_load(file)
         quads = []
         if "magnets" in devices.keys():
             quads += list(devices["magnets"].keys())
