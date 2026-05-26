@@ -38,6 +38,17 @@ class View(QMainWindow):
         self.beamline_box.addItems(beamline_items)
         self.beamline_box.setCurrentIndex(-1)
 
+        self.physics_model_row = QHBoxLayout()
+        self.physics_model_label = QLabel("Select physics model:")
+        self.physics_model_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        self.physics_model_label.setMinimumWidth(160)
+        self.physics_model_box = QComboBox()
+        self.physics_model_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.physics_model_row.addWidget(self.physics_model_label)
+        self.physics_model_row.addWidget(self.physics_model_box)
+
+        self.physics_model_box.addItems(["BMAD", "BLEM"])
+
         self.measurement_type_stack = QStackedWidget()
 
         self.measurement_type_row = QHBoxLayout()
@@ -132,6 +143,7 @@ class View(QMainWindow):
 
         # Connecting buttons to functions
         self.beamline_box.currentIndexChanged.connect(self.select_beamline)
+        self.physics_model_box.currentIndexChanged.connect(self.select_physics_model)
         self.profile_region_box.currentIndexChanged.connect(self.select_profile_region)
         self.profile_device_box.currentIndexChanged.connect(self.select_profile_device)
         self.quad_region_box.currentIndexChanged.connect(self.select_quad_region)
@@ -160,6 +172,7 @@ class View(QMainWindow):
         self.measurement_type_stack.addWidget(page_multi)
 
         main_layout.addLayout(self.beamline_row)
+        main_layout.addLayout(self.physics_model_row)
         main_layout.addLayout(self.measurement_type_row)
         main_layout.addWidget(self.measurement_type_stack)
         main_layout.addLayout(result_layout)
@@ -179,6 +192,10 @@ class View(QMainWindow):
         self.quad_region_box.addItems(region_items)
         self.multi_region_box.clear()
         self.multi_region_box.addItems(multi_region_items)
+    
+    def select_physics_model(self):
+        if self.physics_model_box.currentIndex() != -1:    
+            self.controller.select_physics_model(self.physics_model_box.currentText())
 
     def select_profile_region(self):
         if self.profile_region_box.currentIndex() != -1:
@@ -220,6 +237,7 @@ class View(QMainWindow):
             "energy": float(self.quad_scan_energy_input.text()),
             "scan_values": list(map(float, self.scan_values_input.text().split(','))),
             "beamline": self.beamline_box.currentText(),
+            "physics_model": self.physics_model_box.currentText(),
             "magnet_area": self.quad_region_box.currentText(),
             "magnet_name": self.quad_box.currentText(),
             "profile_device_area": self.profile_region_box.currentText(),
@@ -246,6 +264,7 @@ class View(QMainWindow):
         emit_params = {
             "energy": float(self.multi_energy_input.text()),
             "beamline": self.beamline_box.currentText(),
+            "physics_model": self.physics_model_box.currentText(),
             "profile_device_areas": multi_device_areas,
             "profile_device_names": multi_device_names,
         }

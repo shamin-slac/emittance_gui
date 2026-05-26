@@ -32,6 +32,7 @@ class AppModel(BaseModel):
     def quadscan(self, emit_params):
         measurement = QuadScanEmittance(
             energy=emit_params["energy"], 
+            physics_model=emit_params["physics_model"],
             scan_values=emit_params["scan_values"], 
             magnet=emit_params["magnet"], 
             beamsize_measurement=emit_params["beamsize_measurement"],
@@ -92,6 +93,7 @@ class AppModel(BaseModel):
     def multi(self, emit_params):
         measurement = MultiDeviceEmittance(
             energy=emit_params["energy"], 
+            physics_model=emit_params["physics_model"],
             beamsize_measurements=emit_params["beamsize_measurements"],
         )
         result = measurement.measure()
@@ -120,6 +122,7 @@ class AppConfig(BaseModel):
     
     """
     beamline: str = ""
+    physics_model: str = ""
     profile_region: str = ""
     quad_region: str = ""
     measurement_type: str = ""

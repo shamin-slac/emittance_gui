@@ -142,6 +142,9 @@ class Controller:
 
     def select_beamline(self, beamline):
         self.app_config.beamline = beamline
+    
+    def select_physics_model(self, physics_model):
+        self.app_config.physics_model = physics_model
 
     def load_regions(self, beamline):
         with resources.open_text(slac_package_data, 'beampaths.yaml') as file:
