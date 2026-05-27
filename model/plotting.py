@@ -37,7 +37,7 @@ def plot_quad_scan_result(emittance_result):
         # plot fit from twiss at screen calculation
         ax[0].plot(
             k,
-            np.sqrt(beta * emittance_result.emittance[i]),
+            np.sqrt(beta * emittance_result.geometric_emittance[i]) * 1e3,
             "--",
             label=f"{c[i]}_fit",
         )
@@ -107,7 +107,7 @@ def plot_multi_result(emittance_result):
         # plot fit from twiss at screen calculation
         ax[0].plot(
             z,
-            np.sqrt(beta * emittance_result.emittance[i]),
+            np.sqrt(beta * emittance_result.geometric_emittance[i]) * 1e3,
             "--",
             label=f"{c[i]}_fit",
         )

@@ -27,7 +27,7 @@ class Controller:
         `energy`, `scan_values`, `beamline`, `magnet_area`, `magnet_name`,
         `profile_device_area`, `profile_device_name`, `n_shots`
         """
-        """
+
         quad = create_magnet(area=emit_params["magnet_area"], name=emit_params["magnet_name"])
         emit_params["magnet"] = quad
         if emit_params["profile_device_name"].startswith(("OTR", "YAG")):
@@ -50,7 +50,7 @@ class Controller:
             )
         else:
             raise ValueError("Profile device name prefix not recognized")
-        """
+
         self.app_model.quadscan(emit_params)
         return self.app_model.current_data, *self.app_model.plot_data_quad_scan(self.app_model.current_data)
     
