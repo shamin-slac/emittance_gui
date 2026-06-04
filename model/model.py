@@ -75,8 +75,13 @@ class AppModel(BaseModel):
                                     np.array([0.00062267e6, 0.00030789e6, 0.00023073e6,
                                               0.00020197e6, 0.00024109e6, 0.00032542e6,
                                               0.00042986e6, 0.00054356e6])]
-                self.beam_matrix = np.array([[1,2,3],[4,5,6]])
-                self.emittance = np.array([0.01, 0.09999997])
+                self.phase_advances = [np.linspace(0, 360, 9), np.linspace(0, 360, 8)]
+                self.twiss_at_reconstruction = [np.array([[0.52491869, 0.57234878, 2.52912147]]),
+                                        np.array([[0.40792976, -0.34076812, 2.73606637]])]
+                self.beam_matrix = [np.array([[0.0052491869, 0.0057234878, 0.0252912147]]),
+                                        np.array([[0.0040792976, -0.0034076812, 0.0273606637]])]
+                self.geometric_emittance = np.array([0.01, 0.09999997])
+                self.emittance = np.array([156.55, 1565.5])
                 self.bmag = [np.array([9.36189932, 5.66900405, 3.05982085,
                                        1.51113423, 1.00000002, 1.5037432,
                                        5.46649484, 8.88148009, 13.22329213]),

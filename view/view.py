@@ -25,6 +25,14 @@ class View(QMainWindow):
         main_widget = QWidget(self)
         main_layout = QVBoxLayout(main_widget)
 
+        # set default font for GUI
+        main_widget.setStyleSheet("""
+            QWidget {
+                font-size: 14pt;
+            }
+        """)
+
+
         self.beamline_row = QHBoxLayout()
         self.beamline_label = QLabel("Select beamline:")
         self.beamline_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
@@ -122,7 +130,7 @@ class View(QMainWindow):
         
         # Result table
         columns = ["x", "y"]
-        rows = ["Emittance (mm-mrad)", "Beta (m)", "Alpha"]
+        rows = ["Emittance (mm-mrad)", "BMAG", "Beta (m)", "Alpha"]
         self.result_table = QTableWidget(len(rows), len(columns))
         self.result_table.setHorizontalHeaderLabels(columns)
         self.result_table.setVerticalHeaderLabels(rows)
@@ -352,14 +360,17 @@ class View(QMainWindow):
     def populate_table(self, data):
         # Populate emittance and beam params into table
         emittance = data.emittance
-        beta = [data.beam_matrix[0][0], data.beam_matrix[1][0]]
-        alpha = [data.beam_matrix[0][1], data.beam_matrix[1][1]]
+        bmag = data.bmag
+        beta = [data.twiss_at_reconstruction[0][0][0], data.twiss_at_reconstruction[1][0][0]]
+        alpha = [data.twiss_at_reconstruction[0][0][1], data.twiss_at_reconstruction[1][0][1]]
         self.result_table.setItem(0, 0, QTableWidgetItem(str(emittance[0])))
         self.result_table.setItem(0, 1, QTableWidgetItem(str(emittance[1])))
-        self.result_table.setItem(1, 0, QTableWidgetItem(str(beta[0])))
-        self.result_table.setItem(1, 1, QTableWidgetItem(str(beta[1])))
-        self.result_table.setItem(2, 0, QTableWidgetItem(str(alpha[0])))
-        self.result_table.setItem(2, 1, QTableWidgetItem(str(alpha[1])))
+        self.result_table.setItem(1, 0, QTableWidgetItem(str(bmag[0][1])))
+        self.result_table.setItem(1, 1, QTableWidgetItem(str(bmag[1][1])))
+        self.result_table.setItem(2, 0, QTableWidgetItem(str(beta[0])))
+        self.result_table.setItem(2, 1, QTableWidgetItem(str(beta[1])))
+        self.result_table.setItem(3, 0, QTableWidgetItem(str(alpha[0])))
+        self.result_table.setItem(3, 1, QTableWidgetItem(str(alpha[1])))
 
 class MatplotlibWidget(QWidget):
     def __init__(self, parent=None):
