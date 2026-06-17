@@ -28,7 +28,7 @@ class AppModel(BaseModel):
     previous_data: Any = {}
     status: str = None
 
-
+    '''
     def quadscan(self, emit_params):
         measurement = QuadScanEmittance(
             energy=emit_params["energy"], 
@@ -82,19 +82,15 @@ class AppModel(BaseModel):
                                         np.array([[0.0040792976, -0.0034076812, 0.0273606637]])]
                 self.geometric_emittance = np.array([0.01, 0.09999997])
                 self.emittance = np.array([156.55, 1565.5])
-                self.bmag = [np.array([9.36189932, 5.66900405, 3.05982085,
-                                       1.51113423, 1.00000002, 1.5037432,
-                                       5.46649484, 8.88148009, 13.22329213]),
-                            np.array([3.79730158, 1.17877574, 1.00000001,
-                                      1.18141181, 1.73104511, 2.65702909,
-                                      3.96758895, 5.67104666])]
+                self.bmag = [np.array([1.00000002]),
+                            np.array([1.00000001])]
                 self.metadata = []
             
             def __iter__(self):
                 return iter(self.__dict__.items())
         
         self.load_data(EmittanceMeasurementResult())
-    '''
+
 
     def multi(self, emit_params):
         measurement = MultiDeviceEmittance(

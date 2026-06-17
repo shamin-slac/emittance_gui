@@ -365,8 +365,8 @@ class View(QMainWindow):
         alpha = [data.twiss_at_reconstruction[0][0][1], data.twiss_at_reconstruction[1][0][1]]
         self.result_table.setItem(0, 0, QTableWidgetItem(str(emittance[0])))
         self.result_table.setItem(0, 1, QTableWidgetItem(str(emittance[1])))
-        self.result_table.setItem(1, 0, QTableWidgetItem(str(bmag[0][1])))
-        self.result_table.setItem(1, 1, QTableWidgetItem(str(bmag[1][1])))
+        self.result_table.setItem(1, 0, QTableWidgetItem(str(bmag[0][0])))
+        self.result_table.setItem(1, 1, QTableWidgetItem(str(bmag[1][0])))
         self.result_table.setItem(2, 0, QTableWidgetItem(str(beta[0])))
         self.result_table.setItem(2, 1, QTableWidgetItem(str(beta[1])))
         self.result_table.setItem(3, 0, QTableWidgetItem(str(alpha[0])))
